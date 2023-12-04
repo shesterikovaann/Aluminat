@@ -4,13 +4,15 @@ import io
 
 from PyQt5 import uic, QtGui  # Импортируем uic
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QLabel, QTableWidgetItem, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QLabel, QTableWidgetItem,\
+    QLineEdit, QDialog
 from time import sleep
 
 
 class Aluminat(QMainWindow):  # окно с выбором, что делать
-    def __init__(self):  # start передаёт значение - это начинает выполняться программа или это выход назад в меню
+    def __init__(self, memnost=False):  # start передаёт значение - это начинает выполняться программа или это выход назад в меню
         super().__init__()
+        self.mem = memnost
         self.initUI()
 
     def initUI(self):
@@ -30,13 +32,18 @@ class Aluminat(QMainWindow):  # окно с выбором, что делать
         self.data_book.show()
         self.data_book.move(50, 180)
         self.data_book.clicked.connect(self.open_book)
-
-        self.pixmap = QPixmap('aluminat_text.png')
-        self.image = QLabel(self)
-        self.image.move(50, -70)
-        self.image.resize(300, 250)
-        self.image.setPixmap(self.pixmap)
-
+        if not self.mem:
+            self.pixmap = QPixmap('aluminat_text.png')
+            self.image = QLabel(self)
+            self.image.move(50, -70)
+            self.image.resize(300, 250)
+            self.image.setPixmap(self.pixmap)
+        else:
+            self.pixmap = QPixmap('aluminat_text_mem.png')
+            self.image = QLabel(self)
+            self.image.move(50, -70)
+            self.image.resize(300, 250)
+            self.image.setPixmap(self.pixmap)
 
     def start_calculate(self):
         self.hide()
@@ -84,6 +91,7 @@ class Raschet(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        self.mem = False
         self.pixmap = QPixmap('mini_logo.png')
         self.image = QLabel(self)
         self.image.move(720, 450)
@@ -92,61 +100,91 @@ class Raschet(QMainWindow):
         self.back_button.clicked.connect(self.back)
         self.get_formule_button.clicked.connect(self.show_build)
         self.clear_button.clicked.connect(self.clearing)
+        self.settings_button.clicked.connect(self.setting)
 
     def clearing(self):
         self.structure_formule_place.clear()
 
+    def setting(self):
+        self.di = QDialog()
+        self.di.resize(300, 100)
+        self.di.show()
+        self.la = QLabel("Сменить тему главного меню на мемную?", self.di)
+        self.la.move(10, 10)
+        self.la.show()
+        self.button_a = QPushButton("Ok", self.di)
+        self.button_a.move(30, 60)
+        self.button_a.resize(100, 30)
+        self.button_a.show()
+        self.button_r = QPushButton("Cancel", self.di)
+        self.button_r.move(150, 60)
+        self.button_r.resize(100, 30)
+        self.button_r.show()
+
+        self.button_a.clicked.connect(self.acc)
+        self.button_r.clicked.connect(self.r)
+
+    def acc(self):
+        self.mem = True
+        self.di.hide()
+
+    def r(self):
+        self.mem = False
+        self.di.hide()
+
+
     def show_build(self):
-        chain, name, connection = self.build()  # здесь выведем вещество в виджет вместе со связями
-        joined_chain = chain[1][0]
-        for i in range(len(chain[1]) - 1):
-            if name.endswith("ен"):
-                if i + 1 in connection:
-                    joined_chain += "  =  "
+        try:
+            chain, name, connection = self.build()  # здесь выведем вещество в виджет вместе со связями
+            joined_chain = chain[1][0]
+            for i in range(len(chain[1]) - 1):
+                if name.endswith("ен"):
+                    if i + 1 in connection:
+                        joined_chain += "  =  "
+                    else:
+                        joined_chain += "  -  "
+                elif name.endswith("ин"):
+                    if i + 1 in connection:
+                        joined_chain += "  ≡  "
+                    else:
+                        joined_chain += "  -  "
                 else:
                     joined_chain += "  -  "
-            elif name.endswith("ин"):
-                if i + 1 in connection:
-                    joined_chain += "  ≡  "
-                else:
-                    joined_chain += "  -  "
-            else:
-                joined_chain += "  -  "
-            joined_chain += chain[1][i + 1]
-        chain[1] = joined_chain
-        # print(chain)
+                joined_chain += chain[1][i + 1]
+            chain[1] = joined_chain
+            # print(chain)
 
-        up_branch = [" "] * (len(chain[1]) + 10)
-        down_branch = [" "] * (len(chain[1]) + 10)
-        up_indexes_of_palochka = []
-        down_indexes_of_palochka = []
-        for i in range(len(chain[1])):
-            if chain[1][i] == "C":
-                if chain[0][0]:
-                    up_indexes_of_palochka.append(i)
-                    up_branch[i:i + len(chain[0][0])] = list(chain[0][0])
-                del chain[0][0]
-                if chain[2][0]:
-                    down_indexes_of_palochka.append(i)
-                    down_branch[i:i + len(chain[2][0])] = list(chain[2][0])
-                del chain[2][0]
-        chain[0] = "".join(up_branch).rstrip()
-        chain[2] = "".join(down_branch).rstrip()
-        up_palochki = [" "] * len(up_branch)
-        down_palochki = [" "] * len(down_branch)
-        for i in up_indexes_of_palochka:
-            up_palochki[i] = "|"
-        for i in down_indexes_of_palochka:
-            down_palochki[i] = "|"
-        chain.insert(1, "".join(up_palochki))
-        chain.insert(3, "".join(down_palochki))
-        print("\n".join(chain))
-        self.structure_formule_place.appendPlainText("\n".join(chain))
-
+            up_branch = [" "] * (len(chain[1]) + 10)
+            down_branch = [" "] * (len(chain[1]) + 10)
+            up_indexes_of_palochka = []
+            down_indexes_of_palochka = []
+            for i in range(len(chain[1])):
+                if chain[1][i] == "C":
+                    if chain[0][0]:
+                        up_indexes_of_palochka.append(i)
+                        up_branch[i:i + len(chain[0][0])] = list(chain[0][0])
+                    del chain[0][0]
+                    if chain[2][0]:
+                        down_indexes_of_palochka.append(i)
+                        down_branch[i:i + len(chain[2][0])] = list(chain[2][0])
+                    del chain[2][0]
+            chain[0] = "".join(up_branch).rstrip()
+            chain[2] = "".join(down_branch).rstrip()
+            up_palochki = [" "] * len(up_branch)
+            down_palochki = [" "] * len(down_branch)
+            for i in up_indexes_of_palochka:
+                up_palochki[i] = "|"
+            for i in down_indexes_of_palochka:
+                down_palochki[i] = "|"
+            chain.insert(1, "".join(up_palochki))
+            chain.insert(3, "".join(down_palochki))
+            self.structure_formule_place.appendPlainText("\n".join(chain))
+        except Exception:
+            self.structure_formule_place.appendPlainText("Неверный ввод")
 
     def back(self):
         self.hide()
-        self.main_window = Aluminat()
+        self.main_window = Aluminat(memnost=self.mem)
         self.main_window.show()
 
     def build(self):  # возвращает список компонентов структуры вещества, название и список, где какие связи
@@ -214,7 +252,7 @@ class Raschet(QMainWindow):
                         raise ValueError
                     str_h = f"H{h}" if h != 1 else "H"
                     chain[1][i] = "C" + (str_h if h else "")
-                print(chain)
+                # print(chain)
 
             if main_element[-2:] == "ан":  # проверяем на одинокую:_( водородную связь
                 for i in range(len(chain[1])):
@@ -229,7 +267,7 @@ class Raschet(QMainWindow):
                         raise ValueError
                     str_h = f"H{h}" if h != 1 else "H"
                     chain[1][i] = "C" + (str_h if h else "")
-                print(chain)
+                # print(chain)
 
             if main_element[-2:] == "ин":  # проверяем на тройную водородную связь
                 last_triple = False
@@ -256,7 +294,7 @@ class Raschet(QMainWindow):
                         raise ValueError
                     str_h = f"H{h}" if h != 1 else "H"
                     chain[1][i] = "C" + (str_h if h else "")
-                print(chain)
+                # print(chain)
             return chain, main_element, connection
 
         except Exception:
@@ -285,13 +323,6 @@ class Raschet(QMainWindow):
         name = self.name[:]
         try:
             if "-" not in name:
-                # for i in self.elements:
-                #     if i[0] == name:
-                #         struct, alk = i[1], i[2]
-                #         print(struct, alk)
-                #         break
-                # else:
-                #     raise ValueError
                 return [], [], name, []
             connect = []
             if name[-1] in "1234567890":  # проверяем на наличие двойных связей - циферок в конце
@@ -304,6 +335,7 @@ class Raschet(QMainWindow):
                 if name.endswith(i[0]):
                     main_el = i[0]
                     name = name[:-len(i[0])]
+                    break
 
             numbers, names = [], []
             if "-" in name:  # проверяем оставшиеся циферки которые обязательно соединяются '-'
