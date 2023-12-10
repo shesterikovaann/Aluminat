@@ -10,7 +10,7 @@ from time import sleep
 
 
 class Aluminat(QMainWindow):  # окно с выбором, что делать
-    def __init__(self, memnost=False):  # start передаёт значение - это начинает выполняться программа или это выход назад в меню
+    def __init__(self, memnost=False):  # мемность это про сменение темы на мемную
         super().__init__()
         self.mem = memnost
         self.initUI()
@@ -45,12 +45,12 @@ class Aluminat(QMainWindow):  # окно с выбором, что делать
             self.image.resize(300, 250)
             self.image.setPixmap(self.pixmap)
 
-    def start_calculate(self):
+    def start_calculate(self):  # запускает расчётное окно
         self.hide()
         self.al = Raschet()
         self.al.show()
 
-    def open_book(self):
+    def open_book(self):  # запускает справочник
         self.hide()
         self.book = Book()
         self.book.show()
@@ -61,7 +61,7 @@ class StartForm(QWidget):  # окно загрузки начальное
         super().__init__()
         self.initUI()
 
-    def initUI(self): # запускаем окошко с загрузкой на 2 секунды (чист по приколу:)) так официальнее
+    def initUI(self): # запускаем окошко с загрузкой
         self.setGeometry(700, 400, 500, 300)
         self.setWindowTitle('Вступаете в общество Алюминатов?')
         self.pixmap = QPixmap('logo.png')
@@ -81,10 +81,8 @@ class StartForm(QWidget):  # окно загрузки начальное
         self.main_window = Aluminat()
         self.main_window.show()
 
-        # начальное окно - картинка и загрузка
 
-
-class Raschet(QMainWindow):
+class Raschet(QMainWindow):  # РАСЧЁТНОЕ ОКНО
     def __init__(self):
         super().__init__()
         uic.loadUi('stroenie.ui', self)
@@ -102,10 +100,10 @@ class Raschet(QMainWindow):
         self.clear_button.clicked.connect(self.clearing)
         self.settings_button.clicked.connect(self.setting)
 
-    def clearing(self):
+    def clearing(self):  # чистка
         self.structure_formule_place.clear()
 
-    def setting(self):
+    def setting(self):  # сменение мемной темы
         self.di = QDialog()
         self.di.resize(300, 100)
         self.di.show()
@@ -133,9 +131,9 @@ class Raschet(QMainWindow):
         self.di.hide()
 
 
-    def show_build(self):
+    def show_build(self):  # здесь выведем вещество в виджет вместе со связями
         try:
-            chain, name, connection = self.build()  # здесь выведем вещество в виджет вместе со связями
+            chain, name, connection = self.build()
             joined_chain = chain[1][0]
             for i in range(len(chain[1]) - 1):
                 if name.endswith("ен"):
@@ -182,7 +180,7 @@ class Raschet(QMainWindow):
         except Exception:
             self.structure_formule_place.appendPlainText("Неверный ввод")
 
-    def back(self):
+    def back(self):  # в меню
         self.hide()
         self.main_window = Aluminat(memnost=self.mem)
         self.main_window.show()
@@ -300,7 +298,7 @@ class Raschet(QMainWindow):
         except Exception:
             self.structure_formule_place.appendPlainText("Неверный ввод")
 
-    def branch_formule(self, elem):
+    def branch_formule(self, elem):  # ищет элемент в списке
         for i in self.elements:  # элемент точно есть в списке, мы уже проверяли это при вычислении компонентов
             if i[0] == elem:
                 return i[1]
@@ -319,7 +317,7 @@ class Raschet(QMainWindow):
         self.elements = self.cur.execute(que).fetchall()
         # print(self.elements)
 
-    def components(self):
+    def components(self): # разделяет сложную формулу на мелкие составляющие
         name = self.name[:]
         try:
             if "-" not in name:
@@ -373,7 +371,7 @@ class Raschet(QMainWindow):
             self.structure_formule_place.appendPlainText("Неверный ввод")
 
 
-class Book(QMainWindow):
+class Book(QMainWindow):  # справочник
     def __init__(self):
         super().__init__()
         uic.loadUi('data_book.ui', self)
@@ -410,23 +408,23 @@ class Book(QMainWindow):
         groups = self.cur.execute(que2).fetchall()
         # print(groups)
 
-        # Заполнили размеры таблицы
+        # Заполнили размеры таблицы 2
         self.groups.setRowCount(len(groups))
         self.groups.setColumnCount(len(groups[0]))
         self.groups.setHorizontalHeaderLabels(
             ['ID', "Название", "Формула", "ID группы"])
 
-        # Заполнили таблицу полученными элементами
+        # Заполнили таблицу 2 полученными элементами
         for i, elem in enumerate(groups):
             for j, val in enumerate(elem):
                 self.groups.setItem(i, j, QTableWidgetItem(str(val)))
 
-    def back(self):
+    def back(self):  # в меню
         self.hide()
         self.main_window = Aluminat()
         self.main_window.show()
 
-    def add(self):
+    def add(self): 
         self.add_form = AddForm(self)
         self.add_form.show()
 
@@ -435,7 +433,7 @@ class Book(QMainWindow):
         self.del_form.show()
 
 
-class DelForm(QMainWindow):
+class DelForm(QMainWindow):  # удалить из бд
     def __init__(self, root):
         super().__init__(root)
         uic.loadUi('empty.ui', self)
@@ -471,7 +469,7 @@ class DelForm(QMainWindow):
         self.close()
 
 
-class AddForm(QMainWindow):
+class AddForm(QMainWindow):  # добавить в бд
     def __init__(self, root):
         super().__init__(root)
         uic.loadUi('empty.ui', self)
