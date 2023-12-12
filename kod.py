@@ -1,12 +1,10 @@
 import sqlite3
 import sys
-import io
 
 from PyQt5 import uic, QtGui  # Импортируем uic
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QLabel, QTableWidgetItem,\
     QLineEdit, QDialog
-from time import sleep
 
 
 class Aluminat(QMainWindow):  # окно с выбором, что делать
@@ -129,7 +127,6 @@ class Raschet(QMainWindow):  # РАСЧЁТНОЕ ОКНО
     def r(self):
         self.mem = False
         self.di.hide()
-
 
     def show_build(self):  # здесь выведем вещество в виджет вместе со связями
         try:
@@ -317,7 +314,7 @@ class Raschet(QMainWindow):  # РАСЧЁТНОЕ ОКНО
         self.elements = self.cur.execute(que).fetchall()
         # print(self.elements)
 
-    def components(self): # разделяет сложную формулу на мелкие составляющие
+    def components(self):  # разделяет сложную формулу на мелкие составляющие
         name = self.name[:]
         try:
             if "-" not in name:
@@ -424,7 +421,7 @@ class Book(QMainWindow):  # справочник
         self.main_window = Aluminat()
         self.main_window.show()
 
-    def add(self): 
+    def add(self):
         self.add_form = AddForm(self)
         self.add_form.show()
 
